@@ -17,9 +17,15 @@
 package com.by_syk.netupdown.widget;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.TextView;
+
+import com.by_syk.lib.storage.SP;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by By_syk on 2016-11-08.
@@ -37,8 +43,9 @@ public class FloatTextView extends TextView {
     private long lastTapTime = 0;
     private int tapTimes = 0;
 
-    private boolean isMoving = false;
-
+    private boolean isMoving = false,isPin=false;
+    private SP sp;
+    private SharedPreferences sharedPreferences;
     private static final int TIME_LONG_PRESS = 1200;
 
     private Runnable doubleTapRunnable = new Runnable() {
@@ -74,15 +81,21 @@ public class FloatTextView extends TextView {
 
     public FloatTextView(Context context) {
         this(context, null);
+        sharedPreferences=context.getSharedPreferences("com.by_syk.netupdown_preferences",Context.MODE_PRIVATE);
+
     }
 
     public FloatTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        sharedPreferences=context.getSharedPreferences("com.by_syk.netupdown_preferences",Context.MODE_PRIVATE);
+
     }
 
     public void setOffsetY(float offset) {
         offsetY = offset;
     }
+
+    /*方法postDelayed的作用是延迟多少毫秒后开始运行，而removeCallbacks方法是删除指定的Runnable对象，使线程对象停止运行。*/
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -92,6 +105,7 @@ public class FloatTextView extends TextView {
                 lastY = event.getRawY();
                 viewStartX = event.getX();
                 viewStartY = event.getY();
+
                 isMoving = false;
                 long time = System.currentTimeMillis();
                 if (time - lastTapTime < 600) {
@@ -114,9 +128,11 @@ public class FloatTextView extends TextView {
             case MotionEvent.ACTION_MOVE: {
                 float x = event.getRawX();
                 float y = event.getRawY();
+                isPin=sharedPreferences.getBoolean("pin",false);
+                //Log.i(TAG, "onTouchEvent: "+isPin);
                 if (Math.abs(x - lastX) > 1 || Math.abs(y - lastY) > 1) {
                     isMoving = true;
-                    if (onMoveListener != null) {
+                    if (onMoveListener != null&&!isPin) {
                         onMoveListener.onMove((int) (x - viewStartX), (int) (y - viewStartY - offsetY));
                     }
                 }

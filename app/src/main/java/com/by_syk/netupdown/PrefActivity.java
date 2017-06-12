@@ -22,10 +22,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
@@ -34,6 +36,8 @@ import com.by_syk.lib.storage.SP;
 import com.by_syk.netupdown.service.NetTrafficService;
 import com.by_syk.netupdown.util.ExtraUtil;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by By_syk on 2016-11-08.
  */
@@ -41,9 +45,11 @@ import com.by_syk.netupdown.util.ExtraUtil;
 public class PrefActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
     private SP sp;
 
-    private CheckBoxPreference checkBoxPreference;
+    private CheckBoxPreference checkBoxPreference,pinPreference;
 
     private ServiceReceiver serviceReceiver;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +58,16 @@ public class PrefActivity extends PreferenceActivity implements Preference.OnPre
 
         checkBoxPreference = (CheckBoxPreference) findPreference("run");
         checkBoxPreference.setOnPreferenceChangeListener(this);
+        pinPreference = (CheckBoxPreference) findPreference("pin");
+        pinPreference.setOnPreferenceChangeListener(this);
 
         serviceReceiver = new ServiceReceiver();
 
-        sp = new SP(this, false);
+        sp = new SP(getApplicationContext(), false);
+
+        sharedPreferences=getSharedPreferences("test",MODE_PRIVATE);
+        editor=sharedPreferences.edit();
+
     }
 
     @Override
@@ -71,7 +83,6 @@ public class PrefActivity extends PreferenceActivity implements Preference.OnPre
     @Override
     protected void onResume() {
         super.onResume();
-
         if (checkBoxPreference.isChecked() && !NetTrafficService.isRunning) {
             runService();
         }
@@ -80,7 +91,6 @@ public class PrefActivity extends PreferenceActivity implements Preference.OnPre
     @Override
     public void onStop() {
         super.onStop();
-
         unregisterReceiver(serviceReceiver);
     }
 
